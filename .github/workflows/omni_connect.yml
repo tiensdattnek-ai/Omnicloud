@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════
-#  OmNiCloud RDP Engine v4.0 — Free RDP tối ưu cho Việt Nam
+#  OmNiCloud RDP Engine v4.1 — Free RDP tối ưu cho Việt Nam
 #  ─────────────────────────────────────────────────────────────────
 #  HƯỚNG DẪN CÀI ĐẶT NHANH (không cần tạo secret nào cả):
 #    1. Tạo repository mới (hoặc fork) trên GitHub của bạn
@@ -10,13 +10,16 @@
 #         - userEmail      : email ĐÃ ĐĂNG KÝ + XÁC MINH trên web
 #         - osChoice       : Windows Server 2025 / 2022 / latest
 #         - customUsername : tên đăng nhập RDP (mặc định: omnicloud)
-#    4. Chờ ~2 phút — thông tin kết nối RDP tự xuất hiện trên
-#       dashboard web OmNiCloud kèm thông báo.
+#    4. Chờ ~2-4 phút — tiến độ hiện trực tiếp trên dashboard, thông
+#       tin kết nối + nút tải OmNiCloud Connect tự xuất hiện khi sẵn sàng.
 #
-#  Web chính thức : http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run
-#  Core Endpoint  : http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run/api/get-core
-#  Tunnel         : Tự động 100% miễn phí — Cloudflare / Bore / Pinggy
-#                   (không cần token, không cần đăng ký dịch vụ nào)
+#  Web chính thức : https://omnicloud.space-z.ai
+#  Core Endpoint  : https://omnicloud.space-z.ai/api/get-core
+#  Đường truyền   : OmNiCloud Relay — TỰ CHẾ 100% qua domain riêng
+#                   omnicloud.space-z.ai (KHÔNG dùng bore/cloudflare/
+#                   pinggy hay dịch vụ tunnel có sẵn nào)
+#                   + Native RDP UDP phía máy chủ (độ trễ thấp)
+#  Thời gian      : ~2-4 phút — tiến độ hiện TRỰC TIẾP trên dashboard
 # ═══════════════════════════════════════════════════════════════════
 
 name: OmNiCloud RDP Engine
@@ -65,7 +68,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host ''
-          Write-Host '  ☁️  OMNICLOUD RDP ENGINE v4.0' -ForegroundColor Cyan
+          Write-Host '  ☁️  OMNICLOUD RDP ENGINE v4.1 — TỰ CHẾ RELAY' -ForegroundColor Cyan
           Write-Host ('  Hệ điều hành : ' + $env:OSTYPE) -ForegroundColor Cyan
           Write-Host ('  Email        : ' + $env:EMAIL) -ForegroundColor Cyan
           Write-Host '  Đang bắt tay với Core Engine...' -ForegroundColor Cyan
