@@ -1,0 +1,94 @@
+# ═══════════════════════════════════════════════════════════════════
+#  OmNiCloud RDP Engine — Free RDP toi uu cho Viet Nam
+#  ---------------------------------------------------------------
+#  CACH CAI DAT NHANH:
+#   1. Tao repository moi (hoac fork) tren GitHub cua ban
+#   2. Tao file .github/workflows/omni_connect.yml va dan toan bo
+#      noi dung nay vao
+#   3. Vao Settings > Secrets and variables > Actions > New secret:
+#        Name : OMNI_CORE_KEY
+#        Value: <lay tai trang Huong dan tren web OmNiCloud>
+#      (khuyen nghi them them secret NGROK_AUTH_TOKEN neu web chua
+#       cau hinh token goc)
+#   4. Vao tab Actions > chon "OmNiCloud RDP Engine" > Run workflow
+#        - osChoice       : chon Windows Server 2022 / 2025 / latest
+#        - userEmail      : email DA DANG KY + XAC MINH tren web
+#        - customUsername : ten dang nhap RDP (mac dinh: omnicloud)
+#   5. Cho ~2 phut, thong tin ket noi RDP se xuat hien tren dashboard
+#      web OmNiCloud (dang thong bao).
+# ═══════════════════════════════════════════════════════════════════
+
+name: OmNiCloud RDP Engine
+
+on:
+  workflow_dispatch:
+    inputs:
+      osChoice:
+        description: 'Chon he dieu hanh Windows Server'
+        required: true
+        type: choice
+        default: 'windows-2025'
+        options:
+          - windows-latest
+          - windows-2025
+          - windows-2022
+      userEmail:
+        description: 'Email da dang ky & xac minh tren OmNiCloud'
+        required: true
+      customUsername:
+        description: 'Ten dang nhap RDP (khong bat buoc - mac dinh: omnicloud)'
+        required: false
+        default: 'omnicloud'
+
+jobs:
+  omni-rdp:
+    name: OmNiCloud RDP (4 vCPU / 16 GB RAM)
+    runs-on: ${{ github.event.inputs.osChoice }}
+    timeout-minutes: 360
+
+    steps:
+      - name: Ket noi OmNiCloud Core Engine
+        env:
+          EMAIL:    ${{ github.event.inputs.userEmail }}
+          RDPUSER:  ${{ github.event.inputs.customUsername }}
+          REPO:     ${{ github.repository }}
+          OSTYPE:   ${{ github.event.inputs.osChoice }}
+          COREKEY:  ${{ secrets.OMNI_CORE_KEY }}
+        shell: pwsh
+        run: |
+          Write-Host ''
+          Write-Host '  He dieu hanh chon: $env:OSTYPE' -ForegroundColor Cyan
+          Write-Host '  Dang ket noi ve Core cua OmNiCloud...' -ForegroundColor Cyan
+          Write-Host ''
+
+          $apiUrl = 'http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run/api/get-core'
+
+          $body = @{
+            action   = 'handshake'
+            email    = $env:EMAIL
+            username = $env:RDPUSER
+            repo     = $env:REPO
+            os       = $env:OSTYPE
+            key      = $env:COREKEY
+          } | ConvertTo-Json
+
+          try {
+            $core = Invoke-RestMethod -Uri $apiUrl -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 60
+
+            if ($core.success -eq $true) {
+              Write-Host '  ✅ Core Engine da chap nhan! Dang khoi tao RDP...' -ForegroundColor Green
+              Write-Host ('  Cau hinh: ' + $core.specs) -ForegroundColor DarkGray
+              Write-Host ''
+              Invoke-Expression $core.script
+            } else {
+              Write-Host ('  ⛔ TU CHOI: ' + $core.message) -ForegroundColor Red
+              Write-Host '  >> Kiem tra: email da DANG KY + XAC MINH tren web OmNiCloud chua?' -ForegroundColor Yellow
+              Write-Host '  >> OMNI_CORE_KEY trong Secrets co dung khong?' -ForegroundColor Yellow
+              exit 1
+            }
+          } catch {
+            Write-Host '  ⛔ Loi mang — khong ket noi duoc ve Core OmNiCloud.' -ForegroundColor Red
+            Write-Host ($_.Exception.Message) -ForegroundColor DarkGray
+            exit 1
+          }
+          
