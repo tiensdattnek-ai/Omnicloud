@@ -61,7 +61,7 @@ jobs:
           Write-Host '  Dang ket noi ve Core cua OmNiCloud...' -ForegroundColor Cyan
           Write-Host ''
 
-          $apiUrl = 'https://omnicloud.space-z.ai/api/get-core'
+          $apiUrl = 'http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run/api/get-core'
 
           $body = @{
             action   = 'handshake'
