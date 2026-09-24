@@ -1,21 +1,22 @@
 # ═══════════════════════════════════════════════════════════════════
-#  OmNiCloud RDP Engine — Free RDP toi uu cho Viet Nam
-#  ---------------------------------------------------------------
-#  CACH CAI DAT NHANH:
-#   1. Tao repository moi (hoac fork) tren GitHub cua ban
-#   2. Tao file .github/workflows/omni_connect.yml va dan toan bo
-#      noi dung nay vao
-#   3. Vao Settings > Secrets and variables > Actions > New secret:
-#        Name : OMNI_CORE_KEY
-#        Value: <lay tai trang Huong dan tren web OmNiCloud>
-#      (khuyen nghi them them secret NGROK_AUTH_TOKEN neu web chua
-#       cau hinh token goc)
-#   4. Vao tab Actions > chon "OmNiCloud RDP Engine" > Run workflow
-#        - osChoice       : chon Windows Server 2022 / 2025 / latest
-#        - userEmail      : email DA DANG KY + XAC MINH tren web
-#        - customUsername : ten dang nhap RDP (mac dinh: omnicloud)
-#   5. Cho ~2 phut, thong tin ket noi RDP se xuat hien tren dashboard
-#      web OmNiCloud (dang thong bao).
+#  OmNiCloud RDP Engine v4.0 — Free RDP tối ưu cho Việt Nam
+#  ─────────────────────────────────────────────────────────────────
+#  HƯỚNG DẪN CÀI ĐẶT NHANH (không cần tạo secret nào cả):
+#    1. Tạo repository mới (hoặc fork) trên GitHub của bạn
+#    2. Tạo file .github/workflows/omni_connect.yml — dán toàn bộ
+#       nội dung này vào → Commit
+#    3. Vào tab Actions → chọn "OmNiCloud RDP Engine" → Run workflow
+#         - coreKey        : GIỮ NGUYÊN giá trị mặc định
+#         - userEmail      : email ĐÃ ĐĂNG KÝ + XÁC MINH trên web
+#         - osChoice       : Windows Server 2025 / 2022 / latest
+#         - customUsername : tên đăng nhập RDP (mặc định: omnicloud)
+#    4. Chờ ~2 phút — thông tin kết nối RDP tự xuất hiện trên
+#       dashboard web OmNiCloud kèm thông báo.
+#
+#  Web chính thức : http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run
+#  Core Endpoint  : http://omniclod-deploy-yrxsghquim.cn-hongkong-vpc.fcapp.run/api/get-core
+#  Tunnel         : Tự động 100% miễn phí — Cloudflare / Bore / Pinggy
+#                   (không cần token, không cần đăng ký dịch vụ nào)
 # ═══════════════════════════════════════════════════════════════════
 
 name: OmNiCloud RDP Engine
@@ -23,46 +24,54 @@ name: OmNiCloud RDP Engine
 on:
   workflow_dispatch:
     inputs:
+      coreKey:
+        description: 'OMNI_CORE_KEY — giữ nguyên giá trị mặc định'
+        required: true
+        type: string
+        default: 'omni_vn_core_2026_free_rdp'
+      userEmail:
+        description: 'Email đã đăng ký & xác minh trên OmNiCloud'
+        required: true
+        type: string
       osChoice:
-        description: 'Chon he dieu hanh Windows Server'
+        description: 'Chọn hệ điều hành Windows Server'
         required: true
         type: choice
         default: 'windows-2025'
         options:
-          - windows-latest
           - windows-2025
           - windows-2022
-      userEmail:
-        description: 'Email da dang ky & xac minh tren OmNiCloud'
-        required: true
+          - windows-latest
       customUsername:
-        description: 'Ten dang nhap RDP (khong bat buoc - mac dinh: omnicloud)'
+        description: 'Tên đăng nhập RDP (không bắt buộc — mặc định: omnicloud)'
         required: false
+        type: string
         default: 'omnicloud'
 
 jobs:
   omni-rdp:
-    name: OmNiCloud RDP (4 vCPU / 16 GB RAM)
+    name: OmNiCloud RDP (4 vCPU / 16 GB RAM / GMT+7)
     runs-on: ${{ github.event.inputs.osChoice }}
     timeout-minutes: 360
 
     steps:
-      - name: Ket noi OmNiCloud Core Engine
+      - name: '☁️ Kết nối OmNiCloud Core Engine'
         env:
-          EMAIL:    ${{ github.event.inputs.userEmail }}
-          RDPUSER:  ${{ github.event.inputs.customUsername }}
-          REPO:     ${{ github.repository }}
-          OSTYPE:   ${{ github.event.inputs.osChoice }}
-          COREKEY:  ${{ secrets.OMNI_CORE_KEY }}
+          EMAIL:   ${{ github.event.inputs.userEmail }}
+          RDPUSER: ${{ github.event.inputs.customUsername }}
+          REPO:    ${{ github.repository }}
+          OSTYPE:  ${{ github.event.inputs.osChoice }}
+          COREKEY: ${{ github.event.inputs.coreKey }}
         shell: pwsh
         run: |
           Write-Host ''
-          Write-Host '  He dieu hanh chon: $env:OSTYPE' -ForegroundColor Cyan
-          Write-Host '  Dang ket noi ve Core cua OmNiCloud...' -ForegroundColor Cyan
+          Write-Host '  ☁️  OMNICLOUD RDP ENGINE v4.0' -ForegroundColor Cyan
+          Write-Host ('  Hệ điều hành : ' + $env:OSTYPE) -ForegroundColor Cyan
+          Write-Host ('  Email        : ' + $env:EMAIL) -ForegroundColor Cyan
+          Write-Host '  Đang bắt tay với Core Engine...' -ForegroundColor Cyan
           Write-Host ''
 
           $apiUrl = 'https://omnicloud.space-z.ai/api/get-core'
-
           $body = @{
             action   = 'handshake'
             email    = $env:EMAIL
@@ -76,18 +85,19 @@ jobs:
             $core = Invoke-RestMethod -Uri $apiUrl -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 60
 
             if ($core.success -eq $true) {
-              Write-Host '  ✅ Core Engine da chap nhan! Dang khoi tao RDP...' -ForegroundColor Green
-              Write-Host ('  Cau hinh: ' + $core.specs) -ForegroundColor DarkGray
+              Write-Host '  ✅ Core Engine đã chấp nhận!' -ForegroundColor Green
+              Write-Host ('  Cấu hình: ' + $core.specs) -ForegroundColor DarkGray
+              Write-Host '  Đang tải Core Script và khởi tạo máy chủ...' -ForegroundColor Green
               Write-Host ''
               Invoke-Expression $core.script
             } else {
-              Write-Host ('  ⛔ TU CHOI: ' + $core.message) -ForegroundColor Red
-              Write-Host '  >> Kiem tra: email da DANG KY + XAC MINH tren web OmNiCloud chua?' -ForegroundColor Yellow
-              Write-Host '  >> OMNI_CORE_KEY trong Secrets co dung khong?' -ForegroundColor Yellow
+              Write-Host ('  ⛔ TỪ CHỐI: ' + $core.message) -ForegroundColor Red
+              Write-Host '  >> Email phải ĐĂNG KÝ + XÁC MINH trên web OmNiCloud trước.' -ForegroundColor Yellow
+              Write-Host '  >> OMNI_CORE_KEY giữ nguyên mặc định: omni_vn_core_2026_free_rdp' -ForegroundColor Yellow
               exit 1
             }
           } catch {
-            Write-Host '  ⛔ Loi mang — khong ket noi duoc ve Core OmNiCloud.' -ForegroundColor Red
+            Write-Host '  ⛔ Lỗi mạng — không kết nối được về Core OmNiCloud.' -ForegroundColor Red
             Write-Host ($_.Exception.Message) -ForegroundColor DarkGray
             exit 1
           }
